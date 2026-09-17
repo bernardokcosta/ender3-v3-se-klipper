@@ -530,6 +530,22 @@ choice
 endchoice
 
 
+######################################################################
+# Ender 3 V3 SE stock display
+######################################################################
+
+config E3V3SE_DISPLAY
+    bool "Creality Ender 3 V3 SE stock display bridge" if LOW_LEVEL_OPTIONS
+    depends on MACH_STM32F103
+    depends on !STM32_SERIAL_USART2 && !STM32_SERIAL_USART2_ALT_PD6_PD5
+    default n
+    help
+        Enable the stock Ender 3 V3 SE display on USART2 PA3/PA2 at
+        115200 baud.  This bridge is intended for GD32F303 based boards
+        built with the STM32F103 compatibility target.  The primary
+        Klipper connection must use another interface (normally USART1).
+
+
 config STM32_CANBUS_PB8_PB9
     bool
     default y if STM32_MMENU_CANBUS_PB8_PB9 || STM32_CMENU_CANBUS_PB8_PB9

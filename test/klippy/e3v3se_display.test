@@ -1,0 +1,6 @@
+# Load the complete Ender 3 V3 SE configuration against its MCU dictionary.
+DICTIONARY e3v3se-gd32f303.dict
+CONFIG ../../config/printer-creality-ender3-v3-se-gd32f303-2023.cfg
+
+STATUS
+ENDER3V3SE_DISPLAY_STATUS

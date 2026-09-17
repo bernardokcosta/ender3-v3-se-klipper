@@ -1,0 +1,68 @@
+name: Ender 3 V3 SE
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  display-and-firmware:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi \
+          build-essential libffi-dev python3-dev python3-venv
+        python3 -m venv ci_build/venv
+        ci_build/venv/bin/pip install -r scripts/klippy-requirements.txt
+
+    - name: Test display module
+      run: python3 -m unittest discover -s test/e3v3se_display -p 'test_*.py'
+
+    - name: Build GD32F303 target
+      run: |
+        cp test/configs/e3v3se-gd32f303.config .config
+        make olddefconfig
+        make V=1
+        python3 -c '
+        import json
+        data = json.load(open("out/klipper.dict"))
+        commands = data["commands"]
+        responses = data["responses"]
+        required_commands = (
+            "config_e3v3se_display oid=%c baud=%u",
+            "e3v3se_display_send oid=%c data=%*s",
+            "e3v3se_display_get_status oid=%c")
+        required_responses = (
+            "e3v3se_display_response oid=%c data=%*s",
+            "e3v3se_display_status oid=%c rx_overflows=%u tx_overflows=%u")
+        assert all(item in commands for item in required_commands)
+        assert all(item in responses for item in required_responses)
+        assert data["config"]["E3V3SE_DISPLAY_BRIDGE"] == 1
+        assert data["config"]["E3V3SE_DISPLAY_MAX_CHUNK"] == 40
+        '
+
+    - name: Validate Klippy configuration
+      run: |
+        mkdir -p ci_build/ender3-v3-se-dict
+        cp out/klipper.dict ci_build/ender3-v3-se-dict/e3v3se-gd32f303.dict
+        ci_build/venv/bin/python scripts/test_klippy.py \
+          -d ci_build/ender3-v3-se-dict \
+          test/klippy/e3v3se_display.test
+
+    - name: Create versioned artifact
+      run: |
+        git fetch https://github.com/Klipper3d/klipper.git master:refs/remotes/upstream/master
+        mkdir -p ci_build/ender3-v3-se-artifact
+        cp out/klipper.bin ci_build/ender3-v3-se-artifact/klipper.bin
+        cp out/klipper.dict ci_build/ender3-v3-se-artifact/klipper.dict
+        cp out/defconfig ci_build/ender3-v3-se-artifact/defconfig
+        printf 'commit=%s\nupstream_base=%s\nhardware=CR4NS200320C14\nmcu=GD32F303RET6\nklipper_target=STM32F103-compatible\nbuild_date_utc=%s\n' "$GITHUB_SHA" "$(git merge-base HEAD refs/remotes/upstream/master)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > ci_build/ender3-v3-se-artifact/BUILD-METADATA.txt
+
+    - name: Upload firmware
+      uses: actions/upload-artifact@v4
+      with:
+        name: ender3-v3-se-gd32f303-${{ github.sha }}
+        path: ci_build/ender3-v3-se-artifact
