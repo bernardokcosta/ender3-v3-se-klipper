@@ -13,7 +13,7 @@ build on this target merely because another C14 board contains that processor.
 ## Safety status
 
 This repository can validate software behavior and compile the firmware, but it
-cannot physically validate motion, heater polarity, probe behavior, or the
+cannot physically validate motion, heater output control, probe behavior, or the
 bootloader on a particular printer. Keep one hand on emergency power during the
 first checks. Do not start a print until homing, heater verification, CR-Touch,
 Z offset, and travel limits have been checked at low speed.
@@ -24,6 +24,11 @@ documented cases of incorrect offsets and nozzle-to-bed collisions. This profile
 uses the stock CR-Touch through Klipper's upstream `bltouch` implementation.
 
 ## Host installation
+
+Download the source and firmware files from the same
+[GitHub release](https://github.com/bernardokcosta/ender3-v3-se-klipper/releases/latest).
+The release tag is the authoritative source version for its `klipper.bin` and
+`klipper.dict`; do not run a host checkout from another commit with that binary.
 
 On MainsailOS for the Orange Pi Zero 3, install Klippy from this repository and
 checkout the same commit that will be used to build the MCU firmware. Keep the
@@ -87,8 +92,9 @@ Expected outputs:
 - `out/defconfig`: normalized build configuration
 
 The firmware embeds Klipper's Git version and normalized Kconfig. Klippy logs
-both values during connection. The GitHub Actions artifact also contains the
-commit SHA, upstream base, hardware target, MCU target, and UTC build date.
+both values during connection. Release downloads also include the dictionary,
+normalized configuration, checksums, commit SHA, upstream base, hardware
+target, MCU target, and UTC build date.
 
 ## Flashing
 
@@ -107,16 +113,20 @@ the host module with a configuration error.
 
 ## Commissioning order
 
-1. Verify that all heaters remain off after connection.
-2. Check X and Y endstop state with `QUERY_ENDSTOPS` by actuating them manually.
-3. Verify CR-Touch deploy/stow and triggered state without homing Z.
-4. Home X and Y at low speed, ready to cut power.
-5. Home Z over the bed with the nozzle safely above it.
-6. Verify travel directions and configured limits.
-7. Run `PID_CALIBRATE` separately for the hotend and bed, then `SAVE_CONFIG`.
-8. Run `PROBE_CALIBRATE`, use manual `TESTZ`, then `ACCEPT` and `SAVE_CONFIG`.
-9. Run `BED_MESH_CALIBRATE`, inspect the mesh, then save it if appropriate.
-10. Calibrate rotation distance, pressure advance, and input shaping on the
+1. Verify that all heaters remain off and both sensors show plausible ambient
+   temperatures after connection.
+2. Heat only the hotend to 50 C. Confirm only its matching sensor rises, turn it
+   off, and verify cooldown. Cut power immediately on unexpected behavior.
+3. Repeat with only the bed at 40 C, then turn it off and verify cooldown.
+4. Check X and Y endstop state with `QUERY_ENDSTOPS` by actuating them manually.
+5. Verify CR-Touch deploy/stow and triggered state without homing Z.
+6. Home X and Y at low speed, ready to cut power.
+7. Home Z over the bed with the nozzle safely above it.
+8. Verify travel directions and configured limits.
+9. Run `PID_CALIBRATE` separately for the hotend and bed, then `SAVE_CONFIG`.
+10. Run `PROBE_CALIBRATE`, use manual `TESTZ`, then `ACCEPT` and `SAVE_CONFIG`.
+11. Run `BED_MESH_CALIBRATE`, inspect the mesh, then save it if appropriate.
+12. Calibrate rotation distance, pressure advance, and input shaping on the
     physical machine. No values for those calibrations are shipped here.
 
 The initial heater control is `watermark` specifically to avoid shipping PID

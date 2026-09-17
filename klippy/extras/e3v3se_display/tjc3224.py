@@ -1,7 +1,7 @@
 # Minimal TJC3224 / DWIN T5L drawing protocol
 #
 # Copyright (C) 2026 Bernardo Costa
-# Based on the GPLv3 TJC3224 implementation by jpcurti and contributors.
+# Based on GPLv3 display work by Joao Pedro Curti, contributors, and odwdinc.
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
 

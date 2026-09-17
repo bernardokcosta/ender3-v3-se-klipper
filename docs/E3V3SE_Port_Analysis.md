@@ -9,6 +9,7 @@ the historical forks should be merged wholesale.
 - `jpcurti/ender3-v3-se-klipper-with-display`: `d74d36bb`, tag `1.0.1`
 - `0xD34D/klipper_ender3_v3_se`: `7e61c1cc`
 - `0xD34D/ender3-v3-se-klipper-config`: `deb2cfd`
+- `huhen/Ender3_V3_SE_for_klipper`: `6649c4b0`, GPLv3
 
 At analysis time the working repository was byte-for-byte at the official
 Klipper head and had no local source changes. The `upstream` remote was then
@@ -44,10 +45,22 @@ The machine fork had ten changed or added files relative to upstream, about
 `prtouch.py`, `hx711s.py`, `dirzctl.py`, their MCU sources, and supporting
 patches to `stepper.py` and `src/Makefile`.
 
-The separate configuration repository supplied the useful CR-Touch pin map and
-mechanical configuration. Those values were split into reusable board, motion,
-calibration, display, and macro files. Machine-specific calibration results
-were removed.
+The separate 0xD34D configuration repository was useful for community hardware
+cross-checking, but it has no declared license and is not the licensing basis
+for the files in this repository. The electrical mapping is traceable to the
+GPLv3 pinout and configuration published by huhen. It was checked against the
+physically identified target board and then split into board, motion,
+calibration, display, and macro files.
+
+Travel and probe geometry were independently recalculated from the configured
+machine envelope and probe offsets. In particular, the mesh maxima are the
+230 mm nozzle maxima plus offsets of -23 mm and -14.5 mm. Machine-specific PID,
+mesh, input-shaper, pressure-advance, and Z-offset results were removed.
+
+The 0xD34D history credits bootuz-dinamon for TMC UART findings and FinalX1992
+for correcting the screw thread direction. They are retained in the public
+credits as hardware cross-check contributors; their unlicensed repositories
+are not represented as GPL sources.
 
 ## Issue conclusions
 
